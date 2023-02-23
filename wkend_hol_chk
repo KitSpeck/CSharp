@@ -1,0 +1,65 @@
+/*Takes a date passed into Leapwork's C# building block and checks if it falls on a weekend or holiday.  If it does, it calculates the previous date depending on if it is a weekend or holiday and rechecks it.  Once the date is no longer a weekend or holiday, the code passes the resulting date into the "Results" field.*/
+
+using System;
+using System.Collections;
+
+public class MyClass : BaseCode
+{
+
+            //check if a date is a holiday
+            public DateTime holChk(DateTime date){
+
+                        DateTime d8t = date;    
+
+                        DateTime[] holiday = new DateTime[17];
+        
+                        holiday[0]=new DateTime(2022, 11, 24);
+                        holiday[1]=new DateTime(2022, 11, 25);
+                        holiday[2]=new DateTime(2022, 12, 23);
+                        holiday[3]=new DateTime(2022, 12, 26);
+                        holiday[4]=new DateTime(2022, 12, 30);
+                        holiday[5]=new DateTime(2023, 1, 2);
+                        holiday[6]=new DateTime(2023, 4, 7);
+                        holiday[7]=new DateTime(2023, 5, 29);
+                        holiday[8]=new DateTime(2023, 7, 4);
+                        holiday[9]=new DateTime(2023, 9, 4);
+                        holiday[10]=new DateTime(2023, 11, 23);
+                        holiday[11]=new DateTime(2023, 11, 24);
+                        holiday[12]=new DateTime(2023, 12, 25);
+                        holiday[13]=new DateTime(2023, 12, 26);
+                        holiday[14]=new DateTime(2024, 1, 1);
+                        holiday[15]=new DateTime(2024, 1, 2);
+                     
+                        for(int a=0; a<17; a++){
+                             if(DateTime.Equals(d8t, holiday[a])){
+                                       d8t=d8t.AddDays(-1);
+                                       d8t=holChk(d8t);
+                             }
+                        }
+                        return d8t;
+            }
+
+
+            // This method is called each time the building block is run.
+            public override void Run()
+            {
+                        string date = Convert.ToString(Fields["GenDate"]);
+                                               
+                        try{
+                            DateTime d8t = DateTime.Parse(date);
+         
+                            //if on a holiday
+                            d8t=holChk(d8t);
+                              
+                            //if on Saturday or Sunday
+                            if(d8t.DayOfWeek==DayOfWeek.Saturday||d8t.DayOfWeek==DayOfWeek.Sunday){
+                                   d8t=d8t.AddDays(-2);
+                            }
+                                                                      
+                            Fields["Result"]=d8t.ToString("MM/dd/yy");
+                        }
+                        catch (FormatException){
+                              Fields["Result"]="Failed";
+                        }
+             }
+}
