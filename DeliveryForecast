@@ -1,0 +1,168 @@
+/*This Selenium script was to access Baan LN and pull a delivery forecast report that is used in composing the Cummins Hot Parts Report.  It is unused due to
+the lack of security for credentials and Leapwork not being able to credentials outside of the code into the code via the C# building block.*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Edge;
+
+
+namespace DelFore
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            String user = username;
+            String pass = password;
+            DateTime addYr = DateTime.Now.AddYears(1);
+            String endYr = Convert.ToString(addYr.Year);
+            
+            try
+            {
+                Console.Write("test case started\n\n");
+
+            //get report from Baan
+                var uri = new Uri("URL REMOVED FOR SECURITY PURPOSES");
+                var uriWithCred = new UriBuilder(uri) { UserName = user, Password = pass };
+                String Baan = Convert.ToString(uriWithCred);
+
+                //Create reference for browser & maximize the window
+                IWebDriver driver = new EdgeDriver();
+                driver.Navigate().GoToUrl(Baan);
+                driver.Manage().Window.Maximize();
+
+                //pause for web loading - 5 seconds
+                Thread.Sleep(10000);
+
+                //click <<
+                driver.FindElement(By.Id("button-expand")).Click();
+
+                //Click LN Nav down arrows
+                driver.FindElement(By.XPath("/html/body/div[2]/div[2]/div/div[3]/div/div/div[1]/div[1]/div/label")).Click();
+
+                //Wait for element to appear
+                Thread.Sleep(5000);
+
+                //switch to iframe that has the options tab
+                driver.SwitchTo().Frame(driver.FindElement(By.XPath("/html/body/div[2]/div[2]/div/div[3]/div/div/div[1]/div[2]/iframe")));
+
+                //click the option tab
+                driver.FindElement(By.Id("tabPanel-bar-page-2")).Click();
+
+                //enter session into session field
+                driver.FindElement(By.Id("session-field")).SendKeys("fffit7440m000");
+
+                //Click Run button
+                driver.FindElement(By.Id("runprogram-button")).Click();
+
+                //switch back to the main iframe
+                driver.SwitchTo().ParentFrame();
+
+                //Click LN Nav down arrows to close
+                driver.FindElement(By.XPath("/html/body/div[2]/div[2]/div/div[3]/div/div/div[1]/div[1]/div/label")).Click();
+
+                //click << to close
+                driver.FindElement(By.Id("button-expand")).Click();
+
+                //pause for session to load - 10 seconds
+                Thread.Sleep(10000);
+
+                //switch to iframe that has the delivery forecast fields
+                driver.SwitchTo().Frame(driver.FindElement(By.XPath("/html/body/div[2]/div[2]/div/div[4]/iframe")));
+                Thread.Sleep(2000);
+
+                //enter info into Delivery Forecast fields
+                driver.FindElement(By.Id("fffit7440m000-0-item.f.segment.2-13-lookup-widget")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("fffit7440m000-0-item.f.segment.2-13-lookup-widget")).SendKeys("CUM000000000");
+               
+                driver.FindElement(By.Id("fffit7440m000-0-item.t.segment.2-14-lookup-widget")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("fffit7440m000-0-item.t.segment.2-14-lookup-widget")).SendKeys("CUM999999999");
+
+                driver.FindElement(By.Id("fffit7440m000-0-ddat.f-15-lookup-widget-widget")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("fffit7440m000-0-ddat.f-15-lookup-widget-widget")).SendKeys(Keys.Backspace);
+
+                driver.FindElement(By.Id("fffit7440m000-0-ddat.t-16-lookup-widget-widget")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("fffit7440m000-0-ddat.t-16-lookup-widget-widget")).SendKeys($"12/31/{endYr}");
+
+                //Click Device tab
+                driver.FindElement(By.Id("fffit7440m000-0-pages-bar-page-1")).Click();
+                Thread.Sleep(2000);
+
+
+                driver.FindElement(By.Id("fffit7440m000-0-__printername-control-widget")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("item_0-label")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("fffit7440m000-0-button-std-file.print")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("dlg-fffit7440m000-0-input-option-7")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.Id("dlg-fffit7440m000-0-input-button-0")).Click();
+                Thread.Sleep(3000);
+
+                driver.FindElement(By.Id("ttstpsplopen-1-devc-1-lookup-widget")).Click();
+                driver.FindElement(By.Id("ttstpsplopen-1-devc-1-lookup-widget")).SendKeys("BU");
+                driver.FindElement(By.Id("ttstpsplopen-1-devc-1-lookup-widget")).SendKeys(Keys.Enter);
+
+                driver.SwitchTo().ParentFrame();
+
+                //Wait for B2Win to load
+                Thread.Sleep(120000);
+
+                //Get Window Handles
+                //String parentWindowHandle = driver.CurrentWindowHandle;
+                //Console.WriteLine($"\n\n Parent window's handle -> {parentWindowHandle} \n\n");
+
+                List<string> firstWindow = driver.WindowHandles.ToList();
+
+                //Switch to B2Win tab
+                driver.SwitchTo().Window(firstWindow[1]);
+
+                driver.FindElement(By.XPath("/html/body/section/section/section/section/section/div[2]/section[1]/div[1]/div[3]/div[1]/div[1]")).Click();
+                driver.FindElement(By.XPath("/html/body/section/section/section/section/section/div[3]/div[2]/div[2]")).Click();
+
+                //Wait for excel sheet to download
+                Thread.Sleep(120000);
+
+                //Log out of B2Win
+                driver.FindElement(By.XPath("/html/body/header/ul/li[2]/a")).Click();
+                Thread.Sleep(2000);
+                driver.FindElement(By.XPath("/html/body/header/ul/li[2]/ul/li[5]/a")).Click();
+                Thread.Sleep(2000);
+
+                //Close B2Win & switch back to Baan
+                driver.SwitchTo().Window(firstWindow[1]).Close();
+                driver.SwitchTo().Window(firstWindow[0]);
+
+                //Sign out of Baan
+                driver.FindElement(By.XPath("/html/body/div[2]/div[2]/div/div[2]/div/div/div[1]")).Click();
+                driver.FindElement(By.Id("userButton-menu-undefined")).Click();
+
+                driver.Close();
+
+                /*//open file
+                DateTime date = DateTime.Now.Date;
+                string curDate = date.ToString("MM-dd-yyyy");
+                string fileName = $"B2Win-{curDate}";
+                string path = $@"C:\Users\dspeck\Downloads\";
+
+                System.IO.File.Move($@"C:\Users\dspeck\Downloads\{fileName}.xlsx", $@"J:\PUBLIC\Leapwork\Cummins Hot Parts Reports\CUM Delivery Forecast {curDate}.xlsx");*/
+
+                Console.Write("\n\ntest case ended");
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("\n\nWell that didn't work......\n\n");
+
+                Console.WriteLine(e.ToString());
+            }
+        }
+    }
+}
